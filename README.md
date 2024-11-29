@@ -269,7 +269,7 @@ The user can manually click the `Data Table Setting` <sup>2</sup> item and check
 > ros2 launch <tm_robot_type>_moveit_config <tm_robot_type>_run_move_group.launch.py
 > ```
 >
->> The prefix `<tm_robot_type>` means the TM Robot type, available for tm5-900, tm5-700, tm12, and tm14 models.<br/> 
+>> The prefix `<tm_robot_type>` means the TM Robot type, available for tm5-900, tm5-700, tm12, and tm14 models, as well as the eyeless models tm5x-900, tm5x-700, tm12x and tm14x models.<br/> 
 >
 > Taking the TM5-900 robot as an example, use the commands introduced above, by typing
 > ```bash
@@ -292,7 +292,7 @@ The user can manually click the `Data Table Setting` <sup>2</sup> item and check
 >> The parameter `<robot_ip_address>` means the IP address of the TM Robot.<br/>
 >
 > Note: When you have finished, press CTRL + C in all terminal windows to shut everything down.<br/>
-> :bookmark_tabs: Note1: There are several built-in TM Robot nominal robot model settings, available for TM5-900, TM5-700, TM12, and TM14 models.<br/>
+> :bookmark_tabs: Note1: There are several built-in TM Robot nominal robot model settings, available for TM5-900, TM5-700, TM12, and TM14 models, as well as the eyeless models tm5x-900, tm5x-700, tm12x and tm14x models.<br/>
 > :bookmark_tabs: Note2: TM Robot set the default to read the Xacro file, such as _TM5-900_ model, to read the file _tm5-900.urdf.xacro_ into robot_description or such as _TM12_ model, to read the file _tm12.urdf.xacro_ into robot_description. If the user wants to use the specific model parameters instead of the nominal model to control the robot, please go back to the section __6. Generate your TM Robot-Specific Kinematics Parameters Files__ to modify the Xacro file.<br/>
 > :bookmark_tabs: Note3: __Running two tm ros drivers at the same IP address is not allowed.__ Since the tm driver node has been written into the moveit launch file, there is no need to execute _ros2 run tm_driver tm_driver robots_ip:=<robot_ip_address>_.<br/>
 
