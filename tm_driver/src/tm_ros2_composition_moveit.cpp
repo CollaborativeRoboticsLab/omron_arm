@@ -98,6 +98,8 @@ int main(int argc, char *argv[])
 
     auto tm_svr = std::make_shared<TmSvrRos2>(node, iface, is_fake);
     auto tm_sct = std::make_shared<TmRos2SctMoveit>(node, iface, is_fake);
+    
+    iface.set_tag(iface.tag, 0);
     rclcpp::spin(node);
     rclcpp::shutdown();
     return 0;

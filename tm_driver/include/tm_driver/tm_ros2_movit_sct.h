@@ -6,9 +6,11 @@
 class TmRos2SctMoveit : public TmSctRos2{
   private:
     rclcpp_action::Server<control_msgs::action::FollowJointTrajectory>::SharedPtr as_;
-    std::mutex as_mtx_;
-    std::string goal_id_;
-    bool has_goal_;
+    std::mutex goal_mtx_;
+    bool goal_thread_open_;
+    std::thread goal_thread_;
+    std::deque< std::pair<rclcpp_action::GoalUUID, std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal>> > deferred_goals_;
+    std::deque< std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> > goals_queue_;
     TmSctCommunication &sct_;
     TmSvrCommunication &svr_;
     TmRobotState &state_;
@@ -20,8 +22,7 @@ class TmRos2SctMoveit : public TmSctRos2{
       const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
     void handle_accepted(
       std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
-    void execute_traj(
-      const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle);
+    void execute_goal_traj();
     void reorder_traj_joints(
       std::vector<trajectory_msgs::msg::JointTrajectoryPoint> &new_traj_points,
       const trajectory_msgs::msg::JointTrajectory& traj);
@@ -40,5 +41,13 @@ class TmRos2SctMoveit : public TmSctRos2{
      , svr_(iface.svr)
      , state_(iface.state){
         intial_action();
+    }
+    ~TmRos2SctMoveit()
+    {
+      goals_queue_.clear();
+      if (goal_thread_.joinable())
+      {
+        goal_thread_.join();
+      }
     }
 };

@@ -38,24 +38,24 @@ void setup_print_debug(bool isPrintDebug){
 }
 
 void default_debug_function_print(char* msg){
-  std::cout<<PRINT_CYAN<<"[DEBUG] "<<msg<<std::endl<<PRINT_RESET;
+  std::cout << PRINT_CYAN << "[DEBUG] " << msg << std::endl << PRINT_RESET;
 }
 void default_print_info_function_print(char* msg){
-  std::cout<<"[INFO] "<<msg<<std::endl;
+  std::cout << "[INFO] " << msg << std::endl;
 }
 void default_print_warn_function_print(char* msg){
-  std::cout<<PRINT_YELLOW<<"[WARN] "<<msg<<std::endl<<PRINT_RESET;
+  std::cout << PRINT_YELLOW << "[WARN] " << msg << std::endl << PRINT_RESET;
 }
 void default_print_error_function_print(char* msg){
-  std::cout<<PRINT_RED<<"[ERROR] "<<msg<<std::endl<<PRINT_RESET;
+  std::cout << PRINT_RED << "[ERROR] " << msg << std::endl << PRINT_RESET;
 }
 void default_print_fatal_function_print(char* msg){
-  std::cout<<PRINT_GREEN<<"[FATAL] "<<msg<<std::endl<<PRINT_RESET;
+  std::cout << PRINT_GREEN << "[FATAL] " << msg << std::endl << PRINT_RESET;
 }
 void default_print_once_function_print(char* msg){
   std::string str(msg);
   if(printed_string.count(str) == 0){
-    std::cout<<"[INFO_ONCE]"<<str<<std::endl;
+    std::cout << "[INFO_ONCE]" << str << std::endl;
 	printed_string.insert(str);
   }
 }

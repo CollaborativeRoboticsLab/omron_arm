@@ -36,6 +36,12 @@ public:
 		std::condition_variable *psvr_cv,
 		std::condition_variable *psct_cv);
 
+	// Check Trajectory
+	int tag = 1; //tag id: 1-15
+	int check_tag = 0; //compare tag id 
+	bool check_tag_status = false;
+	bool is_sct_error = false;
+
 	// start: connect to server, run project, connect to listen node
 	bool start(int timeout_ms = -1, bool stick_play = true);
 
@@ -62,7 +68,7 @@ public:
 	bool script_exit(const std::string &id = "Exit");
 	bool set_tag(int tag, int wait = 0, const std::string &id = "Tag");
 	bool set_wait_tag(int tag, int timeout_ms = 0, const std::string &id = "WaitTag");
-	bool set_stop(const std::string &id = "Stop");
+	bool set_stop(int level=-1, const std::string &id = "Stop");
 	bool set_pause(const std::string &id = "Pause");
 	bool set_resume(const std::string &id = "Resume");
 

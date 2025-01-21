@@ -28,6 +28,7 @@ class ListenNodeConnection{
   bool send_data();
   void check_is_on_listen_node();
   void build_sta_cmd();
+  std::vector<std::string> split_subdata(std::string subdata);
  public:
   ListenNodeConnection(TmDriver &iface ,std::function<void(TmSctData)> sct_msg, std::function<void(std::string, std::string)> sta_msg, bool is_fake_);
   bool connect_tmsct(int timeout, int timeval, bool connect, bool reconnect);

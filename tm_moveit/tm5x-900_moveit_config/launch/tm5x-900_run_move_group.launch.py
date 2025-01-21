@@ -118,6 +118,7 @@ def generate_launch_description():
         package='moveit_ros_move_group',
         executable='move_group',
         output='screen',
+        emulate_tty=True,
         parameters=[
             robot_description,
             robot_description_semantic,
@@ -140,6 +141,7 @@ def generate_launch_description():
         executable='rviz2',
         name='rviz2',
         output='log',
+        emulate_tty=True,
         arguments=['-d', rviz_config_file],
         parameters=[
             robot_description,
@@ -174,6 +176,7 @@ def generate_launch_description():
         executable='tm_driver',
         # name='tm_driver',
         output='screen',
+        emulate_tty=True,
         arguments=args
     )
 

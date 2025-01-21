@@ -6,6 +6,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 std::string TmCommand::set_tag(int tag, int wait)
 {
@@ -17,6 +18,16 @@ std::string TmCommand::set_wait_tag(int tag, int timeout_ms)
 {
 	std::stringstream ss;
 	ss << "WaitQueueTag(" << tag << "," << timeout_ms << ")";
+	return ss.str();
+}
+std::string TmCommand::set_stop(int level)
+{
+	std::stringstream ss;
+	if (level < 0)
+		ss << "StopAndClearBuffer()"; 
+	else
+		ss << "StopAndClearBuffer(" << level << ")";
+	
 	return ss.str();
 }
 std::string TmCommand::set_io(TmIOModule module, TmIOType type, int pin, float state)

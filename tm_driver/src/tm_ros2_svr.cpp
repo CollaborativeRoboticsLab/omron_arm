@@ -141,7 +141,7 @@ void TmSvrRos2::publish_fbs()
     pm.fbs_msg.joint_tor_max = state.joint_torque_max();
 
     /* MC-001:start */    
-	if((state.get_receive_state() != TmCommRC::TIMEOUT) || (fbs_lock_ != false)) {	
+    if((state.get_receive_state() != TmCommRC::TIMEOUT) || (fbs_lock_ != false)) {	
       state.mtx_unlock();
       fbs_lock_ = false; 
     }

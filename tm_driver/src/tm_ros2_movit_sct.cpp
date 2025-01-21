@@ -10,125 +10,178 @@ void TmRos2SctMoveit::intial_action(){
      std::bind(&TmRos2SctMoveit::handle_cancel, this, std::placeholders::_1),
      std::bind(&TmRos2SctMoveit::handle_accepted, this, std::placeholders::_1)
     );
-    goal_id_.clear();
-    has_goal_ = false;
+
+    goal_thread_open_ = false;
 }
 
 rclcpp_action::GoalResponse TmRos2SctMoveit::handle_goal(const rclcpp_action::GoalUUID & uuid,
   std::shared_ptr<const control_msgs::action::FollowJointTrajectory::Goal> goal)
 {
+  std::unique_lock<std::mutex> lck(goal_mtx_);
+  
   auto goal_id = rclcpp_action::to_string(uuid);
-  print_info("Received new action goal %s", goal_id.c_str());
-  //RCLCPP_INFO_STREAM(node->get_logger(), "Received new action goal " << goal_id);
-
-  if (has_goal_) {
-    return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
-  }
+  print_info("[ACTION] Received new action goal %s", goal_id.c_str());
 
   if (!is_fake_) {
     if (!svr_.is_connected()) {
+      print_info("[ACTION] -----GOAL REJECT-----");
       return rclcpp_action::GoalResponse::REJECT;
     }
     if (!sct_.is_connected()) {
+      print_info("[ACTION] -----GOAL REJECT-----");
       return rclcpp_action::GoalResponse::REJECT;
     }
     if (state_.has_error()) {
+      print_info("[ACTION] -----GOAL REJECT-----");
       return rclcpp_action::GoalResponse::REJECT;
     }
   }
 
   if (!has_points(goal->trajectory)) {
+    print_info("[ACTION] -----GOAL REJECT-----");
     return rclcpp_action::GoalResponse::REJECT;
   }
-  //for (auto &jn : goal->trajectory.joint_names) { tmr_DEBUG_STREAM(jn); }
 
+  if (!goals_queue_.empty()) {
+    print_info("[ACTION] -----GOAL ACCEPT_AND_DEFER-----");
+    return rclcpp_action::GoalResponse::ACCEPT_AND_DEFER;
+  }
+
+  print_info("[ACTION] -----GOAL ACCEPT-----");
   return rclcpp_action::GoalResponse::ACCEPT_AND_EXECUTE;
 }
-rclcpp_action::CancelResponse TmRos2SctMoveit::handle_cancel(
-  const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
-{
-  auto goal_id = rclcpp_action::to_string(goal_handle->get_goal_id());
-  print_info("Got request to cancel goal %s", goal_id.c_str());
-  //RCLCPP_INFO_STREAM(node->get_logger(), "Got request to cancel goal " << goal_id);
-  {
-    std::lock_guard<std::mutex> lck(as_mtx_);
-    if (goal_id_.compare(goal_id) == 0 && has_goal_) {
-      has_goal_ = false;
-      iface_.stop_pvt_traj();
-    }
-  }
-  return rclcpp_action::CancelResponse::ACCEPT;
-}
+
 void TmRos2SctMoveit::handle_accepted(
   std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
   {
-    std::unique_lock<std::mutex> lck(as_mtx_);
-    goal_id_ = rclcpp_action::to_string(goal_handle->get_goal_id());
-    has_goal_ = true;
+    std::unique_lock<std::mutex> lck(goal_mtx_);
+    goals_queue_.push_back(goal_handle);
   }
-  // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-  std::thread{std::bind(&TmRos2SctMoveit::execute_traj, this, std::placeholders::_1), goal_handle}.detach();
-
+  print_info("[ACTION] goals_queue_ size: %d", goals_queue_.size());
+  
+  if (!goal_thread_open_) {
+    print_debug("Open Goal Thread");
+    if (goal_thread_.joinable()) {
+      goal_thread_.join();
+    }
+    goal_thread_ = std::thread(&TmRos2SctMoveit::execute_goal_traj, this);
+  }
 }
 
-void TmRos2SctMoveit::execute_traj(
+rclcpp_action::CancelResponse TmRos2SctMoveit::handle_cancel(
   const std::shared_ptr<rclcpp_action::ServerGoalHandle<control_msgs::action::FollowJointTrajectory>> goal_handle)
 {
-  print_info("TM_ROS: trajectory thread begin");
+  auto goal_id = rclcpp_action::to_string(goal_handle->get_goal_id());
+  print_info("[ACTION CANCEL] Cancel request received for goal %s", goal_id.c_str());
 
+  // if the goal is current
+  if(goal_handle->is_executing()) {
+    iface_.stop_pvt_traj();
+    print_info("[ACTION CANCEL] stop_pvt_traj()");
+    print_info("[ACTION CANCEL] Goal %s execution canceled", goal_id.c_str());
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  // remove the goal from queue
+  auto it = std::find(goals_queue_.begin(), goals_queue_.end(), goal_handle);
+  if(it != goals_queue_.end()) {
+    goals_queue_.erase(it);
+    print_info("[ACTION CANCEL] Deferd Goal canceled %s", goal_id.c_str());
+    print_info("deferred_goal_handles queue size: %d", goals_queue_.size());
+    return rclcpp_action::CancelResponse::ACCEPT;
+  }
+
+  // the goal not exist
+  print_warn("[ACTION CANCEL] Cancel request received for goal %s, but it is neither active nor deferred.", goal_id.c_str());
+  return rclcpp_action::CancelResponse::REJECT;
+}
+
+void TmRos2SctMoveit::execute_goal_traj()
+{
+  {
+    std::unique_lock<std::mutex> lck(goal_mtx_);
+    goal_thread_open_ = true;
+  }
+  print_info("[ACTION] -----goal execution thread begin-----");
   auto result = std::make_shared<control_msgs::action::FollowJointTrajectory::Result>();
 
-  //actually, no need to reorder
-  //std::vector<trajectory_msgs::msg::JointTrajectoryPoint> traj_points;
-  //reorder_traj_joints(traj_points, goal_handle->get_goal()->trajectory);
-  auto &traj_points = goal_handle->get_goal()->trajectory.points;
+  while (!goals_queue_.empty()){
+    auto goal_handle = goals_queue_.front();
 
-  if (!is_positions_match(traj_points.front(), 0.01)) {
-    result->error_code = result->PATH_TOLERANCE_VIOLATED;
-    result->error_string = "Start point doesn't match current pose";
-    print_warn(result->error_string.c_str());
-    //RCLCPP_WARN_STREAM(node->get_logger(), result->error_string);
+    try {
+      auto &traj_points = goal_handle->get_goal()->trajectory.points;
+      bool is_match_start_pose = is_positions_match(traj_points.front(), 0.01);
+      if (!is_match_start_pose) {
+        print_warn("[ACTION] Start point doesn't match current pose");
+      }
 
-    //goal_handle->abort(result);
-  }
+      auto pvts = get_pvt_traj(traj_points, 0.025);
+      print_info("[ACTION] traj. total time:= %d", (int)pvts->total_time);
+      if (!goal_handle->is_executing()) {
+        goal_handle->execute();
+        print_info("[ACTION] traj executed");
+      }
 
-  auto pvts = get_pvt_traj(traj_points, 0.025);
-  print_info("TM_ROS: traj. total time:= %d", (int)pvts->total_time);
-  //RCLCPP_INFO_STREAM(rclcpp::get_logger("rclcpp"),"TM_ROS: traj. total time:=" << pvts->total_time);
-
-  if (!goal_handle->is_executing()) {
-    goal_handle->execute();
-    print_info("goal_handle->execute()");
-  }
-
-  if (!is_fake_) {
-    iface_.run_pvt_traj(*pvts);
-  }
-  else {
-    iface_.fake_run_pvt_traj(*pvts);
-  }
-  if (rclcpp::ok()) {
-    if (!is_positions_match(traj_points.back(), 0.01)) {
-      result->error_code = result->GOAL_TOLERANCE_VIOLATED;
-      result->error_string = "Current pose doesn't match Goal point";
-      print_warn(result->error_string.c_str());
-      //RCLCPP_WARN_STREAM(node->get_logger(), result->error_string);
+      if (!is_fake_) {
+        iface_.run_pvt_traj(*pvts); // run traj and wait for done
+      }
+      else {
+        iface_.fake_run_pvt_traj(*pvts);
+      }
+      // ERROR, and clear goal queue
+      if (iface_.is_sct_error) {
+        result->error_code = result->INVALID_JOINTS;
+        result->error_string = "TM_SCT get Error";
+        print_error(result->error_string.c_str());
+        iface_.is_sct_error = false;
+        goal_handle->abort(result);
+        goals_queue_.clear();
+        {
+        std::unique_lock<std::mutex> lck(goal_mtx_);
+        goal_thread_open_ = false;
+        }
+        print_info("[ACTION] ERROR, clean all goals, goal execution thread end");
+        return;
+      }
+      // CANCEL, and start next goal
+      if (goal_handle->is_canceling()) {
+        result->error_code = result->INVALID_GOAL;
+        result->error_string = "Goal canceled";
+        print_info(result->error_string.c_str());
+        goal_handle->canceled(result);
+        print_info("[ACTION] Current traj execution thread end");
+      }
+      // NORMAL, and start next goal
+      else if (goal_handle->is_active()) {
+        bool is_match_final_pose = is_positions_match(traj_points.back(), 0.01);
+        if (!is_match_final_pose) {
+          result->error_code = result->GOAL_TOLERANCE_VIOLATED;
+          result->error_string = "Current pose doesn't match Goal point";
+          print_warn(result->error_string.c_str());
+          goal_handle->abort(result);
+        }
+        else {
+          result->error_code = result->SUCCESSFUL;
+          result->error_string = "Goal reached, success!";
+          print_info(result->error_string.c_str());
+          goal_handle->succeed(result);
+        }
+      }
     }
-    else {
-      result->error_code = result->SUCCESSFUL;
-      result->error_string = "Goal reached, success!";
-      print_info(result->error_string.c_str());
-      //RCLCPP_INFO_STREAM(node->get_logger(), result->error_string);
+    catch (...) {
+      result->error_code = result->INVALID_GOAL;
+      result->error_string = "Goal fail !";
+      goal_handle->abort(result);
     }
-    goal_handle->succeed(result);
+    goals_queue_.pop_front();
   }
+
   {
-    std::lock_guard<std::mutex> lck(as_mtx_);
-    goal_id_.clear();
-    has_goal_ = false;
+    std::unique_lock<std::mutex> lck(goal_mtx_);
+    goal_thread_open_ = false;
   }
-  print_info("TM_ROS: trajectory thread end");
+  print_info("[ACTION] -----goal execution thread end-----");
 }
 
 void TmRos2SctMoveit::reorder_traj_joints(
@@ -205,7 +258,7 @@ void TmRos2SctMoveit::set_pvt_traj(
 
   // first point
   if (sec(traj_points[i].time_from_start) != 0.0) {
-    print_warn("TM_ROS: Traj.: first point should be the current position, with time_from_start set to 0.0");
+    print_warn("[ACTION] Traj.: first point should be the current position, with time_from_start set to 0.0");
     point.time = sec(traj_points[i].time_from_start);
     point.positions = traj_points[i].positions;
     point.velocities = traj_points[i].velocities;
@@ -225,7 +278,7 @@ void TmRos2SctMoveit::set_pvt_traj(
     }
   }
   if (skip_count > 0) {
-    print_warn("TM_ROS: Traj.: skip %d points", (int)skip_count);	
+	    print_warn("[ACTION] Traj.: skip %d points", (int)skip_count);	
     //RCLCPP_WARN_STREAM(rclcpp::get_logger("rclcpp"),"TM_ROS: Traj.: skip " << (int)skip_count << " points");
   }
   // last point
@@ -241,7 +294,7 @@ void TmRos2SctMoveit::set_pvt_traj(
       point.time = sec(traj_points[i].time_from_start) - sec(traj_points[i_2].time_from_start);
       pvts.points.back() = point;
       ++skip_count;
-      print_warn("TM_ROS: Traj.: skip 1 more last point");
+      print_warn("[ACTION] Traj.: skip 1 more last point");
     }
   }
   pvts.total_time = sec(traj_points.back().time_from_start);

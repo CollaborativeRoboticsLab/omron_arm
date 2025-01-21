@@ -66,9 +66,11 @@ void TmSctRos2::sct_msg(TmSctData data)
     if (data.sct_has_error()) {
         print_error("TM_ROS: (TM_SCT): MSG: (%s): %s", sm.sct_msg.id.c_str(), sm.sct_msg.script.c_str());
         print_error("TM_ROS: (TM_SCT): ROS Node Data Error %d", (int)data.sct_has_error());
+        iface_.is_sct_error = true;
     }
     else {
         print_info("TM_ROS: (TM_SCT): MSG: (%s): %s", sm.sct_msg.id.c_str(), sm.sct_msg.script.c_str());
+        iface_.is_sct_error = false;
     }
 
     sm.sct_msg.header.stamp = node->rclcpp::Node::now();
@@ -119,7 +121,7 @@ bool TmSctRos2::set_event(
         rb = iface_.set_wait_tag((int)(req->arg0), (int)(req->arg1));
         break;
     case tm_msgs::srv::SetEvent_Request::STOP:
-        rb = iface_.set_stop();
+        rb = iface_.set_stop((int)(req->arg0));
         break;
     case tm_msgs::srv::SetEvent_Request::PAUSE:
         rb = iface_.set_pause();

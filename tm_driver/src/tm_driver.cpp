@@ -105,9 +105,9 @@ bool TmDriver::set_wait_tag(int tag, int timeout_ms, const std::string &id)
 	return (sct.send_script_str(id, TmCommand::set_wait_tag(tag, timeout_ms)) == RC_OK);
 }
 
-bool TmDriver::set_stop(const std::string &id)
+bool TmDriver::set_stop(int level, const std::string &id)
 {
-	return (sct.send_script_str(id, TmCommand::set_stop()) == RC_OK);
+	return (sct.send_script_str(id, TmCommand::set_stop(level)) == RC_OK);
 }
 
 bool TmDriver::set_pause(const std::string &id)
@@ -178,6 +178,7 @@ bool TmDriver::set_pvt_point(TmPvtMode mode, const TmPvtPoint &point, const std:
 bool TmDriver::set_pvt_traj(const TmPvtTraj &pvts, const std::string &id)
 {
 	std::string script = TmCommand::set_pvt_traj(pvts);
+	print_info("pvts points size: %d", pvts.points.size());
 	print_info("TM_DRV: send script (pvt traj.):\n");
 	print_info("%s\n", script.c_str());
 	return (sct.send_script_str(id, script) == RC_OK);
@@ -185,9 +186,6 @@ bool TmDriver::set_pvt_traj(const TmPvtTraj &pvts, const std::string &id)
 
 bool TmDriver::run_pvt_traj(const TmPvtTraj &pvts)
 {
-	auto time_start = std::chrono::steady_clock::now();
-	auto time_now = time_start;
-
 	if (pvts.points.size() == 0) return false;
 
 	if (!sct.is_connected()) return false;
@@ -199,21 +197,33 @@ bool TmDriver::run_pvt_traj(const TmPvtTraj &pvts)
 		return false;
 	}
 
-	// wait
-	double time = 0.0;
-	while (_is_executing_traj && time < pvts.total_time) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		time_now = std::chrono::steady_clock::now();
-		time = std::chrono::duration_cast<std::chrono::duration<double>>(time_now - time_start).count();
-		//time += 0.001;
-	}
-
+	auto time_start = std::chrono::steady_clock::now();
 	if (_is_executing_traj) {
-		_is_executing_traj = false;
+		// check QueueTag for check motion done or not
+		tag += 1;
+		if (tag > 15) tag = 1;
+		bool success = set_tag(tag, 0);
+		print_info("[trajectory thread] send QueueTag(%d)", tag);
+		while (success){
+			if (check_tag == tag && check_tag_status) {
+				print_info("[trajectory thread] get QueueTag(%d), traj DONE !", tag);
+				break;
+			}
+			else if (!_is_executing_traj) {
+				set_stop(1);
+				print_info("[trajectory thread] traj STOP !");
+				break;
+			}
+			else if(is_sct_error) {
+				print_error("[trajectory thread] SCT ERROR, traj STOP !");
+				break;
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		}
 	}
-	else {
-		set_stop();
-	}
+	auto time_now = std::chrono::steady_clock::now();
+	double time = std::chrono::duration_cast<std::chrono::duration<double>>(time_now - time_start).count();
+
 	print_info("TM_DRV: traj. exec. time:= %.3f", time);
 	return true;
 }

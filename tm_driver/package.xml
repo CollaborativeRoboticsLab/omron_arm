@@ -2,12 +2,13 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>tm_driver</name>
-  <version>1.2.2</version>
+  <version>1.3.0</version>
   <description>Driver for TMFlow</description>
 
   <maintainer email="ken.tsai@tm-robot.com">Ken Tsai</maintainer>
   <maintainer email="leo.wu@tm-robot.com">leo wu</maintainer>
   <maintainer email="yh.wang@tm-robot.com">Yh Wang</maintainer>
+  <maintainer email="steven.zheng@tm-robot.com">Steven Zheng</maintainer>
 
   <license>BSD-3-Clause</license>
 

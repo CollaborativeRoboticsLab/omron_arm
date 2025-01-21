@@ -83,7 +83,7 @@ public:
 
 /*	Stopping robot motion and clear buffer.
 	More details please refer to the TM_Robot_Expression.pdf Chapter 9.3 */
-	static std::string set_stop() { return "StopAndClearBuffer()"; }
+	static std::string set_stop(int level = -1);
 
 /*	Pausing pjoject and robot motion.
 	More details please refer to the TM_Robot_Expression.pdf Chapter 9.4 */	

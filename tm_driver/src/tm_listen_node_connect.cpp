@@ -1,4 +1,5 @@
 #include "tm_driver/tm_listen_node_connect.h"
+#include "sstream"
 
 ListenNodeConnection::ListenNodeConnection
   (TmDriver &iface,std::function<void(TmSctData)> sct_msg, std::function<void(std::string, std::string)> sta_msg, bool is_fake_)
@@ -19,12 +20,37 @@ void ListenNodeConnection::build_sta_cmd(){
         staSubcmd = data.subcmd_str();
         staSubdata = std::string{ data.subdata(), data.subdata_len() };
         sta_updated_ = true;
+
+        if(staSubcmd == "01"){    // mode 01: Tag
+            std::vector<std::string> subdata_vec = split_subdata(staSubdata);
+            std::string staSubdata_tag = subdata_vec[0];
+            std::string staSubdata_tag_status = subdata_vec[1];
+            iface.check_tag = std::stoi(staSubdata_tag);
+            if (staSubdata_tag_status == "true"){
+                iface.check_tag_status = true;
+            }else {
+                iface.check_tag_status = false;
+            }
+            print_info("[check tag] check tag: %d status: %d", iface.check_tag, iface.check_tag_status);
+        }
     }
     sta_cv_.notify_all();
 
     print_info("TM_ROS: (TM_STA): res: (%s): %s", staSubcmd.c_str(), staSubdata.c_str());
     sta_msg(staSubcmd,staSubdata);
 }
+
+std::vector<std::string> ListenNodeConnection::split_subdata(std::string subdata){
+    std::string input_char(subdata);
+    std::vector<std::string> tokens;
+    std::stringstream ss(input_char);
+    std::string token;
+    while (std::getline(ss, token, ',')){
+        tokens.push_back(token);
+    }
+    return tokens;
+}
+
 bool ListenNodeConnection::send_data(){
     TmSctCommunication &sct = sct_;
     int n;
