@@ -18,7 +18,10 @@ setup(
     maintainer_email='leo.wu@tm-robot.com',
     description='techman robot get status python scripts',
     license='BSD-3-Clause',
-    tests_require=['pytest'],
+    # tests_require=['pytest'],
+    extras_require={        
+        'test': ['pytest'],
+    },
     entry_points={
         'console_scripts': [
             'image_talker = tm_get_status.image_pub:main',
