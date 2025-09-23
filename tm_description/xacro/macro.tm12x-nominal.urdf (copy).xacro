@@ -72,32 +72,6 @@
     <xacro:property name="izz_5" value="${2643.21*unit_factor}" />
     <xacro:property name="izz_6" value="${286.595*unit_factor}" />
 
-<!--AMR Base Link Description-->
-  <!-- AMR Base Platform -->
-  <link name="${prefix}amr_base">
-    <visual>
-      <origin rpy="0 0 3.141582654" xyz="0 0 0"/>
-      <geometry>
-        <!-- Scale the mesh to make it larger (1.5x in X and Y, keep Z the same) -->
-        <mesh filename="package://amr_visualisation/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
-      </geometry>
-      <material name="grey">
-        <color rgba="0.5 0.5 0.5 1.0"/>
-      </material>
-    </visual>
-    <collision>
-      <origin rpy="0 0 3.141592654" xyz="0 0 0"/>
-      <geometry>
-        <!-- Scale the collision mesh to match the visual -->
-        <mesh filename="package://amr_visualisation/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
-      </geometry>
-    </collision>
-    <inertial>
-      <mass value="4.07"/>
-      <inertia ixx="0.426" ixy="0.0" ixz="0.0" iyy="0.496" iyz="0.0" izz="0.91"/>
-    </inertial>
-  </link>
-
 <!--LinkDescription-->
   <link name="${prefix}link_0">
     <visual>
@@ -116,17 +90,6 @@
       <origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.000000 0.000000" />
     </xacro:cylinder_inertial_z>
   </link>
-  
-  <!-- Joint connecting AMR base to arm base (link_0) -->
-  <!-- IMPORTANT: The z offset must be at least half the height of the AMR base plus some clearance -->
-  <!-- Typical LD250 height is around 0.3-0.35m, so we place the arm above it -->
-  <joint name="${prefix}amr_to_arm_joint" type="fixed">
-    <parent link="${prefix}amr_base" />
-    <child link="${prefix}link_0" />
-    <!-- Increased z offset to prevent collision between arm base and AMR platform -->
-    <origin rpy="0 0 0" xyz="0.25 0 0.48"/>
-  </joint>
-  
   <joint name="${prefix}joint_1" type="revolute">
     <parent link="${prefix}link_0" />
     <child link="${prefix}link_1" />
@@ -307,15 +270,12 @@
       <inertia ixx="${ixx_6}" ixy="0.000000" ixz="0.000000" iyy="${iyy_6}" iyz="0.000000" izz="${izz_6}" />
     </inertial>
   </link>
-  
-  <!-- Modified base link to now reference the AMR base -->
   <link name="${prefix}base" />
   <joint name="${prefix}base_fixed_joint" type="fixed">
     <parent link="${prefix}base" />
-    <child link="${prefix}amr_base" />
+    <child link="${prefix}link_0" />
     <origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.000000 0.000000" />
   </joint>
-  
   <link name="${prefix}flange" />
   <joint name="${prefix}flange_fixed_joint" type="fixed">
     <parent link="${prefix}link_6" />
