@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(demo)
+project(tm_test)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -19,26 +19,50 @@ add_definitions(-DROS2_BUILD)
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
+find_package(ament_cmake_python REQUIRED)
+find_package(rclpy REQUIRED)
 find_package(rclcpp REQUIRED)
-find_package(std_msgs REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(ament_index_cpp REQUIRED)
 find_package(tm_msgs REQUIRED)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # uncomment the line when a copyright and license is not present in all source files
-  #set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # uncomment the line when this package is not in a git repo
-  #set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
 endif()
 
 include_directories(include
   ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+add_executable(tm_send_command src/send_command.cpp)
+ament_target_dependencies(tm_send_command
+  "techman_robot_msgs"
+  "rclcpp"
+)
+
+add_executable(sub_img src/sub_img.cpp)
+ament_target_dependencies(sub_img
+  "rclcpp"
+  "rclcpp_components"
+  "sensor_msgs"
+  "std_msgs"
+  "OpenCV"
+  "ament_index_cpp"
+)
+
+install(TARGETS
+  tm_send_command
+  sub_img
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY image
+  DESTINATION share/${PROJECT_NAME}
 )
 
 add_executable(demo_send_script 
@@ -248,6 +272,7 @@ install(TARGETS
   demo_get_svr_response
   DESTINATION lib/${PROJECT_NAME}
 )
+
 add_executable(demo_leave_listen_node
   src/demo_leave_listen_node.cpp
 )
@@ -261,6 +286,14 @@ ament_target_dependencies(demo_leave_listen_node
 
 install(TARGETS
   demo_leave_listen_node
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+ament_python_install_package(${PROJECT_NAME})
+
+install(PROGRAMS
+  scripts/get_status.py
+  scripts/image_pub.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

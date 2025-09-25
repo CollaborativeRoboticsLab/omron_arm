@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>ui_for_debug_and_demo</name>
+  <name>tm_inspect</name>
   <version>1.1.2</version>
-  <description>TM DEMO GUI (ui_for_debug_and_demo) is a Qt-based framework used to quickly start connection debugging tools.</description>
+  <description>TM GUI (tm_inspect) is a Qt-based framework used to quickly start connection debugging tools.</description>
 
   <maintainer email="leo.wu@tm-robot.com">leo wu</maintainer>
   <maintainer email="yh.wang@tm-robot.com">Yh Wang</maintainer>

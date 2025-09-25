@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import socket
 
 from threading import Thread
@@ -6,7 +8,7 @@ import time
 
 from rclpy.clock import Clock
 from rclpy.node import Node
-from tm_image import translate_jason_to_list
+from tm_image import translate_json_to_list
 
 
 class Talker(Node):
