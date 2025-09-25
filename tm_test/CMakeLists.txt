@@ -40,7 +40,7 @@ include_directories(include
 
 add_executable(tm_send_command src/send_command.cpp)
 ament_target_dependencies(tm_send_command
-  "techman_robot_msgs"
+  "tm_msgs"
   "rclcpp"
 )
 
@@ -194,7 +194,7 @@ install(TARGETS
 )
 
 add_executable(demo_get_feedback
-  get_status_demo_src/demo_get_feedback.cpp
+  src/demo_get_feedback.cpp
 )
 
 ament_target_dependencies(demo_get_feedback
@@ -210,7 +210,7 @@ install(TARGETS
 )
 
 add_executable(demo_get_torque_feedback
-  get_status_demo_src/demo_get_torque_feedback.cpp
+  src/demo_get_torque_feedback.cpp
 )
 
 ament_target_dependencies(demo_get_torque_feedback
@@ -226,7 +226,7 @@ install(TARGETS
 )
 
 add_executable(demo_get_sct_response
-  get_status_demo_src/demo_get_sct_response.cpp
+  src/demo_get_sct_response.cpp
 )
 
 ament_target_dependencies(demo_get_sct_response
@@ -242,7 +242,7 @@ install(TARGETS
 )
 
 add_executable(demo_get_sta_response
-  get_status_demo_src/demo_get_sta_response.cpp
+  src/demo_get_sta_response.cpp
 )
 
 ament_target_dependencies(demo_get_sta_response
@@ -258,7 +258,7 @@ install(TARGETS
 )
 
 add_executable(demo_get_svr_response
-  get_status_demo_src/demo_get_svr_response.cpp
+  src/demo_get_svr_response.cpp
 )
 
 ament_target_dependencies(demo_get_svr_response
