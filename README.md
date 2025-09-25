@@ -1,3 +1,9 @@
+# OMRON TMR package
+
+This package is a combination of documentation from [OmronAPAC/Omron_TM_ROS2](https://github.com/OmronAPAC/Omron_TM_ROS2) and functionality of [TechmanRobotInc/tmr_ros2](https://github.com/TechmanRobotInc/tmr_ros2)
+
+View [Developer's Guide](https://github.com/guanyewtan/Omron_TM_ROS2/blob/master/docs/DeveloperGuide.adoc).
+
 # __TM ROS Driver__
 
 ## __1. Overview__
