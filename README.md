@@ -1,4 +1,4 @@
-# Omron Base package
+# Omron ARM package
 
 To view the original Readme.md [click here](./docs/README.md)
 
