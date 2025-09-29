@@ -4,7 +4,7 @@ To view the original Readme.md [click here](./docs/README.md)
 
 This package is a combination of documentation from [OmronAPAC/Omron_TM_ROS2](https://github.com/OmronAPAC/Omron_TM_ROS2) and functionality of [TechmanRobotInc/tmr_ros2](https://github.com/TechmanRobotInc/tmr_ros2)
 
-View [Developer's Guide](https://github.com/guanyewtan/Omron_TM_ROS2/blob/master/docs/DeveloperGuide.adoc).
+View [Developer's Guide](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/DeveloperGuide.adoc).
 
 ## Setup
 
@@ -37,9 +37,9 @@ colcon build
 
 ### Initialization
 
-1. [Startup TMFLow software with a listener node](https://github.com/CollaborativeRoboticsLab/tmr_ros2?tab=readme-ov-file#-tmflow-listen-node-setup)
+1. [Startup TMFLow software with a listener node](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/README.md#-tmflow-listen-node-setup)
 
-2. [Establish Remote connection to TM Robot](https://github.com/CollaborativeRoboticsLab/tmr_ros2?tab=readme-ov-file#-remote-connection-to-tm-robot)
+2. [Establish Remote connection to TM Robot](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/README.md#-remote-connection-to-tm-robot)
 
 3. Once the robot starts up, it needs to have the listner node loaded (via TMFlow) and should be in the auto mode. On the arm it needs to flash blue and red, while on the pendent a blue light should appear near letter A.
 
