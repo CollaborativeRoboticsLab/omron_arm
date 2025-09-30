@@ -54,7 +54,7 @@ def generate_launch_description():
     xacro_path = 'tm12x.urdf.xacro'
     moveit_config_path = 'tm12x_moveit_config'    
     srdf_path = 'config/tm12x.srdf'
-    rviz_path = '/launch/run_move_group.rviz'     
+    rviz_path = '/rviz/run_move_group.rviz'     
     
     robot_description_config = xacro.process_file(
         os.path.join(
@@ -109,7 +109,7 @@ def generate_launch_description():
     # Joint limits
     joint_limits_yaml = {
         'robot_description_planning': load_yaml(
-            moveit_config_path, 'config/joint_limits.yaml'
+            moveit_config_path, 'config/joint_limits_robot.yaml'
         )
     }
 
