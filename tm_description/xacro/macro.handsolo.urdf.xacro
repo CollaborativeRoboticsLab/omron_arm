@@ -79,7 +79,7 @@
       <origin rpy="0 0 3.141582654" xyz="0 0 0"/>
       <geometry>
         <!-- Scale the mesh to make it larger (1.5x in X and Y, keep Z the same) -->
-        <mesh filename="package://amr_visualisation/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
+        <mesh filename="package://amr_description/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
       </geometry>
       <material name="grey">
         <color rgba="0.5 0.5 0.5 1.0"/>
@@ -89,7 +89,7 @@
       <origin rpy="0 0 3.141592654" xyz="0 0 0"/>
       <geometry>
         <!-- Scale the collision mesh to match the visual -->
-        <mesh filename="package://amr_visualisation/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
+        <mesh filename="package://amr_description/meshes/LD250.obj" scale="1.25 1.25 1.25"/>
       </geometry>
     </collision>
     <inertial>
