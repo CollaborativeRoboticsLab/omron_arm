@@ -91,3 +91,11 @@ ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py robot_ip:=<robot_
     ros2 launch tm12x_moveit_config tm12x_run_move_group_visualize.launch.py
     ```
 
+
+## To Do List
+
+- [ ] Update TM driver to use standard ros2 parameters 
+- [ ] Update launch files to use standard parameters and remove non-launch related python code
+- [ ] Create cascadeing launch files for TMDriver, Moveit and RVIZ
+- [ ] Add access to camera node on the arm and a standard image publisher to ros2
+
