@@ -51,7 +51,7 @@ def generate_launch_description():
 
     # Configure robot_description
     description_path = 'tm_description'
-    xacro_path = 'tm12x.urdf.xacro'
+    xacro_path = 'handsolo.urdf.xacro'
     moveit_config_path = 'tm12x_moveit_config'    
     srdf_path = 'config/tm12x.srdf'
     rviz_path = '/rviz/run_move_group.rviz'     
