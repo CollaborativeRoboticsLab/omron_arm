@@ -90,8 +90,7 @@ ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py robot_ip:=<robot_
     source install/setup.bash
     ros2 launch tm12x_moveit_config tm12x_run_move_group_visualize.launch.py
     ```
-
-
+    
 ## To Do List
 
 - [ ] Update TM driver to use standard ros2 parameters 
