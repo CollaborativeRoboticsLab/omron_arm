@@ -34,10 +34,6 @@ def load_file(package_name, file_path):
 
 
 def generate_launch_description():
-    # Declare launch arguments for parameters (no default to allow YAML precedence)
-    robot_ip_arg = DeclareLaunchArgument('robot_ip', description='IP address of the robot')
-    use_sim_arg = DeclareLaunchArgument('use_simulation', description='Use simulation (Gazebo)')
-
     # Configure robot_description
     tm_robot_type = 'tm12x'
     description_path = 'tm_description'
@@ -155,17 +151,13 @@ def generate_launch_description():
         output='screen',
         emulate_tty=True,
         parameters=[
-            tm_parameters,
-            {'robot_ip': LaunchConfiguration('robot_ip')},
-            {'use_simulation': LaunchConfiguration('use_simulation')}
+            tm_parameters
         ],
     )
 
     # Launch all nodes
     return LaunchDescription(
         [
-            robot_ip_arg,
-            use_sim_arg,
             tm_driver_node,
             rviz_node,
             static_tf,

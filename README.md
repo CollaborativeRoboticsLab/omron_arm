@@ -55,22 +55,23 @@ source install/setup.bash
 ros2 run tm_driver tm_driver --ros-args -p robot_ip:=<robot_ip_address>
 ```
 
-### TM Robot Arm with Moveit (Simulation)
-
-Update the `config/interface.yaml` with robot ip address and set `use_simulation` to `true`.
-
-TM driver node is included in the tm12x_run_move_group.launch.py file.
-```sh
-source install/setup.bash
-ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py
-```
 
 ### TM Robot Arm with Moveit 
 
 TM driver node is included in the tm12x_run_move_group.launch.py file. Update the `config/interface.yaml` with robot ip address and set `use_simulation` to `false`.
 ```sh
 source install/setup.bash
-ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py robot_ip:=<robot_ip_address>
+ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py
+```
+
+### TM Robot Arm with Moveit (Simulation)
+
+Update the `config/interface.yaml` with robot ip address and set `use_simulation` to `true` or use following
+
+TM driver node is included in the tm12x_run_move_group.launch.py file.
+```sh
+source install/setup.bash
+ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py use_simulation:=true
 ```
 
 ### TM Robot Arm with Moveit (Headless Companion Computer Configuration)

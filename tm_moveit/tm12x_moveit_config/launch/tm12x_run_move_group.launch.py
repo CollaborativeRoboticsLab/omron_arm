@@ -43,10 +43,6 @@ def load_yaml(package_name, file_path):
 
 
 def generate_launch_description():
-    # defualt values are not set to give precedence to the interface.yaml file
-    robot_ip_parameter = DeclareLaunchArgument('robot_ip', description='IP address of the robot')\
-    use_sim_parameter = DeclareLaunchArgument('use_simulation', description='Use simulation (Gazebo)')
-
     # Configure robot_description
     moveit_config_path = 'tm12x_moveit_config'      
     
@@ -164,7 +160,7 @@ def generate_launch_description():
         # name='tm_driver',
         output='screen',
         emulate_tty=True,
-        parameters=[tm_parameters, {'robot_ip': LaunchConfiguration('robot_ip')}, {'use_simulation': LaunchConfiguration('use_simulation')}],
+        parameters=[tm_parameters],
     )
 
     # Launching all the nodes
@@ -175,7 +171,5 @@ def generate_launch_description():
             static_tf,
             robot_state_publisher,
             run_move_group_node,
-            robot_ip_parameter,
-            use_sim_parameter
         ]
     )
