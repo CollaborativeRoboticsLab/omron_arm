@@ -116,13 +116,6 @@
       <origin rpy="0.000000 0.000000 0.000000" xyz="0.000000 0.000000 0.000000" />
     </xacro:cylinder_inertial_z>
   </link>
-
-  <link name="${prefix}laser_frame"/>
-  <joint name="${prefix}base_link_to_laser_frame" type="fixed">
-    <parent link="${prefix}amr_base"/>
-    <child link="${prefix}laser_frame"/>
-    <origin xyz="0.45 0 0.195"/>
-  </joint>
   
   <!-- Joint connecting AMR base to arm base (link_0) -->
   <!-- IMPORTANT: The z offset must be at least half the height of the AMR base plus some clearance -->
