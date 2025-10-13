@@ -12,6 +12,8 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 import xacro
@@ -41,32 +43,14 @@ def load_yaml(package_name, file_path):
 
 
 def generate_launch_description():
-    args = []
-    length = len(sys.argv)
-    if (len(sys.argv) >= 5):
-        i = 4
-        while i < len(sys.argv):
-            args.append(sys.argv[i])
-            i = i + 1
-
     # Configure robot_description
-    description_path = 'tm_description'
-    xacro_path = 'handsolo.urdf.xacro'
-    moveit_config_path = 'tm12x_moveit_config'    
-    srdf_path = 'config/tm12x.srdf'
-    rviz_path = '/rviz/run_move_group.rviz'     
+    moveit_config_path = 'tm12x_moveit_config'      
     
-    robot_description_config = xacro.process_file(
-        os.path.join(
-            get_package_share_directory(description_path),
-            'xacro',
-            xacro_path,
-        )
-    )
+    robot_description_config = xacro.process_file(os.path.join(get_package_share_directory('tm_description'), 'xacro', 'handsolo.urdf.xacro'))
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     # SRDF Configuration
-    robot_description_semantic_config = load_file(moveit_config_path, srdf_path)
+    robot_description_semantic_config = load_file(moveit_config_path, 'config/tm12x.srdf')
     robot_description_semantic = {'robot_description_semantic': robot_description_semantic_config}
 
     # Kinematics
@@ -133,9 +117,7 @@ def generate_launch_description():
     )
 
     # RViz configuration
-    rviz_config_file = (
-        get_package_share_directory(moveit_config_path) + rviz_path
-    )
+    rviz_config_file = (get_package_share_directory(moveit_config_path) + '/rviz/run_move_group.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -171,13 +153,14 @@ def generate_launch_description():
     )
 
     # joint driver
+    tm_parameters = os.path.join(get_package_share_directory(moveit_config_path), 'config', 'interface.yaml')
     tm_driver_node = Node(
         package='tm_driver',
         executable='tm_driver',
         # name='tm_driver',
         output='screen',
         emulate_tty=True,
-        arguments=args
+        parameters=[tm_parameters],
     )
 
     # Launching all the nodes
