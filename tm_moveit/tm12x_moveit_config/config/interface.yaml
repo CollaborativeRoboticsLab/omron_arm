@@ -1,4 +1,4 @@
 tm_driver_node:
   ros__parameters:
     robot_ip: "192.168.1.2"
-    use_simulation : true
+    use_simulation : false
