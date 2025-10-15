@@ -12,13 +12,13 @@ def generate_launch_description():
             'robot_ip',
             default_value='192.168.1.2',
             description='Target robot IP address'
-        ),
+        )
 
     declare_use_simulation = DeclareLaunchArgument(
             'use_simulation',
             default_value='false',
             description='Use simulation mode (true/false)'
-        ),
+        )
 
     system_node = Node(
             package='tm_driver',
@@ -28,7 +28,7 @@ def generate_launch_description():
                 'robot_ip': robot_ip,
                 'use_simulation': use_simulation,
             }],
-        ),
+        )
 
     return LaunchDescription([
         declare_robot_ip,
