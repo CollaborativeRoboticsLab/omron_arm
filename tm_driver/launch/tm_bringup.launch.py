@@ -5,17 +5,17 @@ from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    robot_ip = LaunchConfiguration('robot_ip')
-    use_simulation = LaunchConfiguration('use_simulation')
+    tm_robot_ip = LaunchConfiguration('tm_robot_ip')
+    tm_use_simulation = LaunchConfiguration('tm_use_simulation')
 
     declare_robot_ip = DeclareLaunchArgument(
-            'robot_ip',
+            'tm_robot_ip',
             default_value='192.168.1.2',
             description='Target robot IP address'
         )
 
     declare_use_simulation = DeclareLaunchArgument(
-            'use_simulation',
+            'tm_use_simulation',
             default_value='false',
             description='Use simulation mode (true/false)'
         )
@@ -25,8 +25,8 @@ def generate_launch_description():
             executable='tm_driver',
             output='screen',
             parameters=[{
-                'robot_ip': robot_ip,
-                'use_simulation': use_simulation,
+                'tm_robot_ip': tm_robot_ip,
+                'tm_use_simulation': tm_use_simulation,
             }],
         )
 

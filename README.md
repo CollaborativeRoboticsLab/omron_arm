@@ -52,13 +52,13 @@ Run the following command to connect to robot.
 
 ```sh
 source install/setup.bash
-ros2 run tm_driver tm_driver --ros-args -p robot_ip:=<robot_ip_address>
+ros2 run tm_driver tm_driver --ros-args -p tm_robot_ip:=<robot_ip_address>
 ```
 
 
 ### TM Robot Arm with Moveit 
 
-TM driver node is included in the tm12x_run_move_group.launch.py file. Update the `config/interface.yaml` with robot ip address and set `use_simulation` to `false`.
+TM driver node is included in the tm12x_run_move_group.launch.py file. Update the `config/interface.yaml` with robot ip address and set `tm_use_simulation` to `false`.
 ```sh
 source install/setup.bash
 ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py 
@@ -69,7 +69,7 @@ ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py
 TM driver node is included in the tm12x_run_move_group.launch.py file.
 ```sh
 source install/setup.bash
-ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py use_simulation:=true
+ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py tm_use_simulation:=true
 ```
 
 ### TM Robot Arm with Moveit (Headless Companion Computer Configuration)
@@ -79,7 +79,7 @@ ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py use_simulation:=t
     ```yaml
     command:
     
-    - ros2 launch tm12x_moveit_config tm12x_run_move_group_headless.launch.py robot_ip:=<robot_ip_address> use_simulation:=false
+    - ros2 launch tm12x_moveit_config tm12x_run_move_group_headless.launch.py tm_robot_ip:=<robot_ip_address> use_simulation:=false
     ```
 
     and run
