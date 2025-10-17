@@ -44,6 +44,21 @@ def generate_launch_description():
     controller_path = 'config/moveit2_controllers.yaml'
     joint_limits_path = 'config/joint_limits.yaml'
 
+    # Launch arguments to forward to tm_bringup.launch.py
+    robot_ip = LaunchConfiguration('robot_ip')
+    use_simulation = LaunchConfiguration('use_simulation')
+
+    declare_robot_ip = DeclareLaunchArgument(
+        'robot_ip',
+        default_value='192.168.1.2',
+        description='Target robot IP address'
+    )
+    declare_use_simulation = DeclareLaunchArgument(
+        'use_simulation',
+        default_value='false',
+        description='Use simulation mode (true/false)'
+    )
+
     # MoveIt Configuration
     moveit_config = (
         MoveItConfigsBuilder(tm_robot_type)
@@ -143,22 +158,23 @@ def generate_launch_description():
         ],
     )
 
-    # joint driver
-    tm_parameters = os.path.join(get_package_share_directory(moveit_config_path), 'config', 'interface.yaml')
-    tm_driver_node = Node(
-        package='tm_driver',
-        executable='tm_driver',
-        output='screen',
-        emulate_tty=True,
-        parameters=[
-            tm_parameters
-        ],
+    # Include tm_bringup.launch.py (replaces tm_driver_node)
+    tm_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('tm_driver'), 'launch', 'tm_bringup.launch.py')
+        ),
+        launch_arguments={
+            'robot_ip': robot_ip,
+            'use_simulation': use_simulation,
+        }.items(),
     )
 
     # Launch all nodes
     return LaunchDescription(
         [
-            tm_driver_node,
+            declare_robot_ip,
+            declare_use_simulation,
+            tm_driver_launch,
             rviz_node,
             static_tf,
             robot_state_publisher,

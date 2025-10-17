@@ -103,16 +103,16 @@ int main(int argc, char *argv[])
     // Use ROS2 parameter for robot_ip
     auto node = std::make_shared<rclcpp::Node>("tm_driver_node");
 
-    node->declare_parameter<std::string>("robot_ip", "");
-    std::string host = node->get_parameter("robot_ip").as_string();
+    node->declare_parameter<std::string>("tm_robot_ip", "");
+    std::string host = node->get_parameter("tm_robot_ip").as_string();
 
     // Declare and get 'use_simulation' parameter
-    node->declare_parameter<bool>("use_simulation", false);
-    bool use_simulation = node->get_parameter("use_simulation").as_bool();
+    node->declare_parameter<bool>("tm_use_simulation", false);
+    bool use_simulation = node->get_parameter("tm_use_simulation").as_bool();
 
     if (host.empty() && !use_simulation)
     {
-        RCLCPP_ERROR(node->get_logger(), "Parameter 'robot_ip' is required unless 'use_simulation' is true.");
+        RCLCPP_ERROR(node->get_logger(), "Parameter 'tm_robot_ip' is required unless 'tm_use_simulation' is true.");
         rclcpp::shutdown();
         return 1;
     }
