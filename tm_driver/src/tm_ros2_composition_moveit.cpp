@@ -80,12 +80,12 @@ int main(int argc, char *argv[])
   rclcpp::Node::SharedPtr node = rclcpp::Node::make_shared("tm_driver_node");
 
   // Declare and get 'robot_ip' parameter
-  node->declare_parameter<std::string>("robot_ip", "");
-  std::string host = node->get_parameter("robot_ip").as_string();
+  node->declare_parameter<std::string>("tm_robot_ip", "");
+  std::string host = node->get_parameter("tm_robot_ip").as_string();
 
-  // Declare and get 'use_simulation' parameter
-  node->declare_parameter<bool>("use_simulation", false);
-  bool use_simulation = node->get_parameter("use_simulation").as_bool();
+  // Declare and get 'use_simulation' 
+  node->declare_parameter<bool>("tm_use_simulation", false);
+  bool use_simulation = node->get_parameter("tm_use_simulation").as_bool();
 
   // Optionally handle 'no_log_print' parameter
   node->declare_parameter<bool>("no_log_print", false);
@@ -97,14 +97,14 @@ int main(int argc, char *argv[])
 
   if (host.empty() && !use_simulation)
   {
-    RCLCPP_ERROR(node->get_logger(), "Parameter 'robot_ip' is required unless 'use_simulation' is true.");
+    RCLCPP_ERROR(node->get_logger(), "Parameter 'tm_robot_ip' is required unless 'tm_use_simulation' is true.");
     rclcpp::shutdown();
     return 1;
   }
 
   if (use_simulation)
   {
-    RCLCPP_WARN(node->get_logger(), "Parameter 'use_simulation' is set to true, using fake robot.");
+    RCLCPP_WARN(node->get_logger(), "Parameter 'tm_use_simulation' is set to true, using fake robot.");
   }
 
   TmDriver iface(host, nullptr, nullptr);
