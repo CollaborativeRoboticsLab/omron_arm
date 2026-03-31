@@ -32,10 +32,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y python3-colcon-common-extensions python3-rosdep
-          git clone -b 26compat https://github.com/mongodb/mongo-cxx-driver.git
-          sudo apt-get install scons
-          cd mongo-cxx-driver
-          sudo scons --prefix=/usr/local/ --full --use-system-boost --disable-warnings-as-errors
 
       - name: Initialize rosdep
         run: |
@@ -44,7 +40,12 @@ jobs:
 
       - name: Install package dependencies
         run: |
-          rosdep install --from-paths . --ignore-src --rosdistro humble -r -y
+          rosdep install \
+            --from-paths . \
+            --ignore-src \
+            --rosdistro humble \
+            --dependency-types buildtool buildtool_export build build_export \
+            -r -y
 
       - name: Build workspace
         shell: bash
