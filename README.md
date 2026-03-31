@@ -45,13 +45,23 @@ colcon build
 
 4. If it is in manual mode (arm blinking green and pendent has a yellow light near letter M), press `M/A` button few seconds until the yellow button near M letter starts blinking and quickly enter the password (+-++-) on the pendent using pendent `+` and `-` keys.
 
+
 ### Connect directly to the arm
 
-Run the following command to connect to robot. Replace the `<robot_ip_address>` with actual ip address.
+Run the following command to connect to robot.
 
 ```sh
 source install/setup.bash
-ros2 run tm_driver tm_driver robot_ip:=<robot_ip_address>
+ros2 run tm_driver tm_driver --ros-args -p tm_robot_ip:=<robot_ip_address>
+```
+
+
+### TM Robot Arm with Moveit 
+
+TM driver node is included in the tm12x_run_move_group.launch.py file. Update the `config/interface.yaml` with robot ip address and set `tm_use_simulation` to `false`.
+```sh
+source install/setup.bash
+ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py 
 ```
 
 ### TM Robot Arm with Moveit (Simulation)
@@ -59,24 +69,17 @@ ros2 run tm_driver tm_driver robot_ip:=<robot_ip_address>
 TM driver node is included in the tm12x_run_move_group.launch.py file.
 ```sh
 source install/setup.bash
-ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py
-```
-
-### TM Robot Arm with Moveit 
-
-TM driver node is included in the tm12x_run_move_group.launch.py file. Replace the `<robot_ip_address>` with actual ip address.
-```sh
-source install/setup.bash
-ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py robot_ip:=<robot_ip_address>
+ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py tm_use_simulation:=true
 ```
 
 ### TM Robot Arm with Moveit (Headless Companion Computer Configuration)
 
-1. TM driver node is included in the tm12x_run_move_group.launch.py file. To start the headless moveit server, uncomment the following line on the companion computer
+1. TM driver node is included in the tm12x_run_move_group.launch.py file. To start the headless moveit server, uncomment the following line on the companion computer and update `<robot_ip_address>` with robot ip address.
 
     ```yaml
     command:
-    - ros2 launch tm12x_moveit_config tm12x_run_move_group_headless.launch.py robot_ip:=<robot_ip_address>
+    
+    - ros2 launch tm12x_moveit_config tm12x_run_move_group_headless.launch.py tm_robot_ip:=<robot_ip_address> use_simulation:=false
     ```
 
     and run
@@ -93,8 +96,8 @@ ros2 launch tm12x_moveit_config tm12x_run_move_group.launch.py robot_ip:=<robot_
     
 ## To Do List
 
-- [ ] Update TM driver to use standard ros2 parameters 
-- [ ] Update launch files to use standard parameters and remove non-launch related python code
+- [x] Update TM driver to use standard ros2 parameters 
+- [x] Update launch files to use standard parameters and remove non-launch related python code
 - [ ] Create cascadeing launch files for TMDriver, Moveit and RVIZ
 - [ ] Add access to camera node on the arm and a standard image publisher to ros2
 

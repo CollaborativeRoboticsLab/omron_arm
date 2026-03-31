@@ -5,6 +5,7 @@
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/joint_state.hpp"
 
+
 class TmRos2Node : public rclcpp::Node
 {
 public:
@@ -14,11 +15,11 @@ public:
 
     std::thread pub_thread_;
 
+    //rclcpp::S
     explicit TmRos2Node(const std::string &host);
     ~TmRos2Node();
 
-    struct PubMsg
-    {
+    struct PubMsg {
         rclcpp::Publisher<sensor_msgs::msg::JointState>::SharedPtr joint_pub;
         sensor_msgs::msg::JointState joint_msg;
     } pm_;
@@ -27,44 +28,48 @@ public:
     void publisher();
 };
 
-TmRos2Node::TmRos2Node(const std::string &host)
-    : Node("tm_driver"), iface_(host, nullptr, &sct_cv_)
+TmRos2Node::TmRos2Node(const std::string &host) : Node("tm_driver")
+    , iface_(host, nullptr, &sct_cv_)
 {
     print_info("TM_ROS: hello!");
 
     iface_.start(5000);
 
+    // topic
     pm_.joint_pub = this->create_publisher<sensor_msgs::msg::JointState>("joint_states", 10);
 
     pub_thread_ = std::thread(std::bind(&TmRos2Node::publisher, this));
+
+    // service
+    //auto send_script_srv_ = this->create_service()
+
 }
 
 TmRos2Node::~TmRos2Node()
 {
-    if (pub_thread_.joinable())
-        pub_thread_.join();
+    if (pub_thread_.joinable()) pub_thread_.join();
+
     iface_.halt();
 }
 
 void TmRos2Node::publish_msg()
 {
-    pm_.joint_msg.header.stamp = this->now();
+    pm_.joint_msg.header.stamp = rclcpp::Node::now();
     pm_.joint_msg.position = iface_.state.joint_angle();
     pm_.joint_pub->publish(pm_.joint_msg);
+
 }
 
 void TmRos2Node::publisher()
 {
     print_info("TM_ROS: publisher thread begin");
-    while (rclcpp::ok())
-    {
+    while (rclcpp::ok()) {
         bool reconnect = false;
-        while (rclcpp::ok() && iface_.svr.is_connected() && !reconnect)
-        {
+        while (rclcpp::ok() && iface_.svr.is_connected() && !reconnect) {
             auto rc = iface_.svr.tmsvr_function();
-            switch (rc)
-            {
+            switch (rc) {
             case TmCommRC::OK:
+                // if not running, send play command ..
                 publish_msg();
                 break;
             case TmCommRC::NOTREADY:
@@ -73,21 +78,18 @@ void TmRos2Node::publisher()
                 print_info("TM_ROS2: (TM_SVR) rc=%d", int(rc));
                 reconnect = true;
                 break;
-            default:
-                break;
+            default: break;
             }
         }
         iface_.svr.close_socket();
         print_info("TM_ROS: (TM_SVR) reconnect in");
         int cnt = 5;
-        while (rclcpp::ok() && cnt > 0)
-        {
-            print_info("%d sec...", cnt);
+        while (rclcpp::ok() && cnt > 0) {
+            print_info("%d sec...", (int)cnt);
             std::this_thread::sleep_for(std::chrono::seconds(1));
             --cnt;
         }
-        if (rclcpp::ok())
-        {
+        if (rclcpp::ok()) {
             print_info("TM_ROS: (TM_SVR) connect...");
             iface_.svr.connect_socket(1000);
         }
@@ -99,31 +101,18 @@ void TmRos2Node::publisher()
 int main(int argc, char *argv[])
 {
     rclcpp::init(argc, argv);
-
-    // Use ROS2 parameter for robot_ip
-    auto node = std::make_shared<rclcpp::Node>("tm_driver_node");
-
-    node->declare_parameter<std::string>("tm_robot_ip", "");
-    std::string host = node->get_parameter("tm_robot_ip").as_string();
-
-    // Declare and get 'use_simulation' parameter
-    node->declare_parameter<bool>("tm_use_simulation", false);
-    bool use_simulation = node->get_parameter("tm_use_simulation").as_bool();
-
-    if (host.empty() && !use_simulation)
-    {
-        RCLCPP_ERROR(node->get_logger(), "Parameter 'tm_robot_ip' is required unless 'tm_use_simulation' is true.");
-        rclcpp::shutdown();
-        return 1;
+    std::string host;
+    if (argc > 1) {
+        host = argv[1];
+        if (host.find("robot_ip:=") != std::string::npos) {
+            host.replace(host.begin(), host.begin() + 10, "");
+        } else if (host.find("ip:=") != std::string::npos) {
+            host.replace(host.begin(), host.begin() + 4, "");        
+        }
     }
-
-    if (use_simulation)
-    {
-        RCLCPP_INFO(node->get_logger(), "Using simulation mode. No connection to a real robot.");
+    else {
         rclcpp::shutdown();
-        return 1;
     }
-
     auto nh = std::make_shared<TmRos2Node>(host);
     rclcpp::spin(nh);
     rclcpp::shutdown();

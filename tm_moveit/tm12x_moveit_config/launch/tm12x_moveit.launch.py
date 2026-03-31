@@ -12,10 +12,8 @@ import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.substitutions import (
-    LaunchConfiguration,
-)
-
+from launch.actions import DeclareLaunchArgument
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
 
 import xacro
@@ -36,15 +34,6 @@ def load_file(package_name, file_path):
 
 
 def generate_launch_description():
-    # Declare arguments
-    args = []
-    length = len(sys.argv)
-    if (len(sys.argv) >= 5):
-        i = 4
-        while i < len(sys.argv):
-            args.append(sys.argv[i])
-            i = i + 1
-
     # Configure robot_description
     tm_robot_type = 'tm12x'
     description_path = 'tm_description'
@@ -54,6 +43,21 @@ def generate_launch_description():
     rviz_path = '/rviz/moveit.rviz'
     controller_path = 'config/moveit2_controllers.yaml'
     joint_limits_path = 'config/joint_limits.yaml'
+
+    # Launch arguments to forward to tm_bringup.launch.py
+    robot_ip = LaunchConfiguration('robot_ip')
+    use_simulation = LaunchConfiguration('use_simulation')
+
+    declare_robot_ip = DeclareLaunchArgument(
+        'robot_ip',
+        default_value='192.168.1.2',
+        description='Target robot IP address'
+    )
+    declare_use_simulation = DeclareLaunchArgument(
+        'use_simulation',
+        default_value='false',
+        description='Use simulation mode (true/false)'
+    )
 
     # MoveIt Configuration
     moveit_config = (
@@ -65,7 +69,18 @@ def generate_launch_description():
         .to_moveit_configs()
     )
 
-    # Start the actual move_group node/action server
+    # RViz configuration
+    rviz_config_file = (
+        get_package_share_directory(moveit_config_path) + rviz_path
+    )
+
+    ros2_controllers_path = os.path.join(
+        get_package_share_directory(moveit_config_path),
+        'config',
+        'ros2_controllers.yaml',
+    )
+
+    # Nodes
     run_move_group_node = Node(
         package='moveit_ros_move_group',
         executable='move_group',
@@ -76,10 +91,6 @@ def generate_launch_description():
         ],
     )
 
-    # RViz configuration
-    rviz_config_file = (
-        get_package_share_directory(moveit_config_path) + rviz_path
-    )
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -117,12 +128,6 @@ def generate_launch_description():
     )
 
     # ros2_control using FakeSystem as hardware
-    ros2_controllers_path = os.path.join(
-        get_package_share_directory(moveit_config_path),
-        'config',
-        'ros2_controllers.yaml',
-    )
-
     ros2_control_node = Node(
         package='controller_manager',
         executable='ros2_control_node',
@@ -153,19 +158,23 @@ def generate_launch_description():
         ],
     )
 
-    # joint driver
-    tm_driver_node = Node(
-        package='tm_driver',
-        executable='tm_driver',
-        # name='tm_driver',
-        output='screen',
-        arguments=args
+    # Include tm_bringup.launch.py (replaces tm_driver_node)
+    tm_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('tm_driver'), 'launch', 'tm_bringup.launch.py')
+        ),
+        launch_arguments={
+            'robot_ip': robot_ip,
+            'use_simulation': use_simulation,
+        }.items(),
     )
 
-    # Launching all the nodes
+    # Launch all nodes
     return LaunchDescription(
         [
-            tm_driver_node,
+            declare_robot_ip,
+            declare_use_simulation,
+            tm_driver_launch,
             rviz_node,
             static_tf,
             robot_state_publisher,

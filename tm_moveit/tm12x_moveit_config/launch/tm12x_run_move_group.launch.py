@@ -1,17 +1,11 @@
-############################################################################################### 
-#  tm12x_run_move_group.launch.py
-#   
-#  Various portions of the code are based on original source from 
-#  The reference: "https://github.com/moveit/moveit2/tree/main/moveit_ros/moveit_servo/launch"
-#  and are used in accordance with the following license.
-#  "https://github.com/moveit/moveit2/blob/main/LICENSE.txt"
-############################################################################################### 
-
 import os
 import sys
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration
+from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
 import xacro
@@ -41,32 +35,30 @@ def load_yaml(package_name, file_path):
 
 
 def generate_launch_description():
-    args = []
-    length = len(sys.argv)
-    if (len(sys.argv) >= 5):
-        i = 4
-        while i < len(sys.argv):
-            args.append(sys.argv[i])
-            i = i + 1
+    # Launch arguments to forward to tm_bringup.launch.py
+    robot_ip = LaunchConfiguration('robot_ip')
+    use_simulation = LaunchConfiguration('use_simulation')
+
+    declare_robot_ip = DeclareLaunchArgument(
+        'robot_ip',
+        default_value='192.168.1.2',
+        description='Target robot IP address'
+    )
+    declare_use_simulation = DeclareLaunchArgument(
+        'use_simulation',
+        default_value='false',
+        description='Use simulation mode (true/false)'
+    )
 
     # Configure robot_description
-    description_path = 'tm_description'
-    xacro_path = 'handsolo.urdf.xacro'
-    moveit_config_path = 'tm12x_moveit_config'    
-    srdf_path = 'config/tm12x.srdf'
-    rviz_path = '/rviz/run_move_group.rviz'     
-    
+    moveit_config_path = 'tm12x_moveit_config'      
     robot_description_config = xacro.process_file(
-        os.path.join(
-            get_package_share_directory(description_path),
-            'xacro',
-            xacro_path,
-        )
+        os.path.join(get_package_share_directory('tm_description'), 'xacro', 'handsolo.urdf.xacro')
     )
     robot_description = {'robot_description': robot_description_config.toxml()}
 
     # SRDF Configuration
-    robot_description_semantic_config = load_file(moveit_config_path, srdf_path)
+    robot_description_semantic_config = load_file(moveit_config_path, 'config/tm12x.srdf')
     robot_description_semantic = {'robot_description_semantic': robot_description_semantic_config}
 
     # Kinematics
@@ -86,11 +78,11 @@ def generate_launch_description():
     ompl_planning_pipeline_config['ompl'].update(ompl_planning_yaml)
 
     # Trajectory Execution Configuration
-    # Controllers
     controllers_yaml = load_yaml(moveit_config_path, 'config/controllers.yaml')
-    moveit_controllers = {'moveit_simple_controller_manager': controllers_yaml, 'moveit_controller_manager': 'moveit_simple_controller_manager/MoveItSimpleControllerManager'}
-
-    # Trajectory Execution Functionality
+    moveit_controllers = {
+        'moveit_simple_controller_manager': controllers_yaml,
+        'moveit_controller_manager': 'moveit_simple_controller_manager/MoveItSimpleControllerManager'
+    }
     trajectory_execution = {
         'moveit_manage_controllers': True,
         'trajectory_execution.allowed_execution_duration_scaling': 1.2,
@@ -122,7 +114,7 @@ def generate_launch_description():
         parameters=[
             robot_description,
             robot_description_semantic,
-            robot_description_kinematics,           
+            robot_description_kinematics,
             ompl_planning_pipeline_config,
             trajectory_execution,
             moveit_controllers,
@@ -133,9 +125,7 @@ def generate_launch_description():
     )
 
     # RViz configuration
-    rviz_config_file = (
-        get_package_share_directory(moveit_config_path) + rviz_path
-    )
+    rviz_config_file = (get_package_share_directory(moveit_config_path) + '/rviz/run_move_group.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -170,20 +160,23 @@ def generate_launch_description():
         parameters=[robot_description]
     )
 
-    # joint driver
-    tm_driver_node = Node(
-        package='tm_driver',
-        executable='tm_driver',
-        # name='tm_driver',
-        output='screen',
-        emulate_tty=True,
-        arguments=args
+    # Include tm_bringup.launch.py (replaces tm_driver_node)
+    tm_driver_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('tm_driver'), 'launch', 'tm_bringup.launch.py')
+        ),
+        launch_arguments={
+            'robot_ip': robot_ip,
+            'use_simulation': use_simulation,
+        }.items(),
     )
 
     # Launching all the nodes
     return LaunchDescription(
         [
-            tm_driver_node,
+            declare_robot_ip,
+            declare_use_simulation,
+            tm_driver_launch,
             rviz_node,
             static_tf,
             robot_state_publisher,
