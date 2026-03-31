@@ -1,10 +1,16 @@
-# Omron ARM package
+# TMR ROS2 package
 
 To view the original Readme.md [click here](./docs/README.md)
 
 This package is a combination of documentation from [OmronAPAC/Omron_TM_ROS2](https://github.com/OmronAPAC/Omron_TM_ROS2) and functionality of [TechmanRobotInc/tmr_ros2](https://github.com/TechmanRobotInc/tmr_ros2)
 
-View [Developer's Guide](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/DeveloperGuide.adoc).
+View [Developer's Guide](https://github.com/CollaborativeRoboticsLab/tmr_ros2/blob/humble/docs/DeveloperGuide.adoc).
+
+| Branch | ROS2 Version | Compile |
+|--------|--------------|---------|
+| main | Jazzy | [![main](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml/badge.svg?branch=main)](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml?query=branch%3Amain) |
+| develop | Jazzy | [![develop](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml/badge.svg?branch=develop)](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml?query=branch%3Adevelop) |
+| humble | Humble | [![humble](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml/badge.svg?branch=humble)](https://github.com/CollaborativeRoboticsLab/tmr_ros2/actions/workflows/compile.yml?query=branch%3Ahumble) |
 
 ## Setup
 
@@ -23,7 +29,7 @@ sudo apt install ros-humble-moveit ros-humble-controller-manager ros-humble-join
 Clone the repositories into the `src` folder by
 
 ```sh
-git clone https://github.com/CollaborativeRoboticsLab/omron_arm.git
+git clone https://github.com/CollaborativeRoboticsLab/tmr_ros2.git
 ```
 
 Build by
@@ -37,9 +43,9 @@ colcon build
 
 ### Initialization
 
-1. [Startup TMFLow software with a listener node](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/README.md#-tmflow-listen-node-setup)
+1. [Startup TMFLow software with a listener node](https://github.com/CollaborativeRoboticsLab/tmr_ros2/blob/humble/docs/README.md#-tmflow-listen-node-setup)
 
-2. [Establish Remote connection to TM Robot](https://github.com/CollaborativeRoboticsLab/omron_arm/blob/humble/docs/README.md#-remote-connection-to-tm-robot)
+2. [Establish Remote connection to TM Robot](https://github.com/CollaborativeRoboticsLab/tmr_ros2/blob/humble/docs/README.md#-remote-connection-to-tm-robot)
 
 3. Once the robot starts up, it needs to have the listner node loaded (via TMFlow) and should be in the auto mode. On the arm it needs to flash blue and red, while on the pendent a blue light should appear near letter A.
 

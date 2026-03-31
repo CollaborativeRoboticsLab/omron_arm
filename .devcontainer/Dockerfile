@@ -1,4 +1,4 @@
-FROM ros:humble
+FROM ros:jazzy
 
 # Add vscode user with same UID and GID as your host system
 # (modified from https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user)
