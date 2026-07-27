@@ -1,4 +1,25 @@
 #include "tm_driver/tm_ros2_movit_sct.h"
+
+namespace {
+
+bool parse_tag_status(const std::string &subdata, int &tag_id, bool &tag_ok)
+{
+  auto comma = subdata.find(',');
+  if (comma == std::string::npos || comma == 0) {
+    return false;
+  }
+  try {
+    tag_id = std::stoi(subdata.substr(0, comma));
+  }
+  catch (const std::exception &) {
+    return false;
+  }
+  tag_ok = (subdata.substr(comma + 1) == "true");
+  return true;
+}
+
+}
+
 void TmRos2SctMoveit::intial_action(){
     as_ = rclcpp_action::create_server<control_msgs::action::FollowJointTrajectory>(
      node->get_node_base_interface(),
@@ -154,16 +175,36 @@ void TmRos2SctMoveit::execute_goal_traj()
       }
       // NORMAL, and start next goal
       else if (goal_handle->is_active()) {
-        bool is_match_final_pose = is_positions_match(traj_points.back(), 0.01);
-        if (!is_match_final_pose) {
+        const double final_pose_tolerance = 0.02;
+        const double settle_seconds = pvts->total_time + 3.0 > 4.0 ? pvts->total_time + 3.0 : 4.0;
+        const auto settle_deadline = std::chrono::steady_clock::now() + std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double>(settle_seconds));
+        bool is_match_final_pose = is_positions_match(traj_points.back(), final_pose_tolerance);
+        bool is_tag_confirmed = (iface_.check_tag == iface_.tag && iface_.check_tag_status);
+        while (!is_match_final_pose && !is_tag_confirmed && std::chrono::steady_clock::now() < settle_deadline && goal_handle->is_active()) {
+          if (listenNodeConnection) {
+            std::string subcmd;
+            std::string subdata;
+            if (listenNodeConnection->ask_sta_struct("01", "", 0.2, subcmd, subdata) && subcmd == "01") {
+              int tag_id = 0;
+              bool tag_ok = false;
+              if (parse_tag_status(subdata, tag_id, tag_ok) && tag_id == iface_.tag && tag_ok) {
+                is_tag_confirmed = true;
+              }
+            }
+          }
+          std::this_thread::sleep_for(std::chrono::milliseconds(50));
+          is_match_final_pose = is_positions_match(traj_points.back(), final_pose_tolerance);
+          is_tag_confirmed = (iface_.check_tag == iface_.tag && iface_.check_tag_status);
+        }
+        if (!is_match_final_pose && !is_tag_confirmed) {
           result->error_code = result->GOAL_TOLERANCE_VIOLATED;
-          result->error_string = "Current pose doesn't match Goal point";
+          result->error_string = "Current pose doesn't match Goal point after settle time";
           print_warn(result->error_string.c_str());
           goal_handle->abort(result);
         }
         else {
           result->error_code = result->SUCCESSFUL;
-          result->error_string = "Goal reached, success!";
+          result->error_string = is_tag_confirmed ? "Goal reached, success via QueueTag!" : "Goal reached, success!";
           print_info(result->error_string.c_str());
           goal_handle->succeed(result);
         }
@@ -236,7 +277,10 @@ bool TmRos2SctMoveit::is_positions_match(
 {
   auto q_act = state_.joint_angle();
   for (size_t i = 0; i < point.positions.size(); ++i) {
-    if (fabs(point.positions[i] - q_act[i]) > eps)
+    const double delta = std::atan2(
+      std::sin(point.positions[i] - q_act[i]),
+      std::cos(point.positions[i] - q_act[i]));
+    if (std::fabs(delta) > eps)
       return false;
   }
   return true;

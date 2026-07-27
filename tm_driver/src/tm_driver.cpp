@@ -202,11 +202,19 @@ bool TmDriver::run_pvt_traj(const TmPvtTraj &pvts)
 		// check QueueTag for check motion done or not
 		tag += 1;
 		if (tag > 15) tag = 1;
+		const double completion_grace = 0.5;
+		const double expected_completion_time = pvts.total_time + completion_grace;
 		bool success = set_tag(tag, 0);
 		print_info("[trajectory thread] send QueueTag(%d)", tag);
 		while (success){
+			auto elapsed = std::chrono::duration_cast<std::chrono::duration<double>>(
+				std::chrono::steady_clock::now() - time_start).count();
 			if (check_tag == tag && check_tag_status) {
 				print_info("[trajectory thread] get QueueTag(%d), traj DONE !", tag);
+				break;
+			}
+			else if (elapsed >= expected_completion_time) {
+				print_warn("[trajectory thread] QueueTag(%d) confirmation missing after %.3f sec, using planned duration fallback", tag, elapsed);
 				break;
 			}
 			else if (!_is_executing_traj) {
@@ -224,6 +232,7 @@ bool TmDriver::run_pvt_traj(const TmPvtTraj &pvts)
 	auto time_now = std::chrono::steady_clock::now();
 	double time = std::chrono::duration_cast<std::chrono::duration<double>>(time_now - time_start).count();
 
+	_is_executing_traj = false;
 	print_info("TM_DRV: traj. exec. time:= %.3f", time);
 	return true;
 }

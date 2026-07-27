@@ -1,6 +1,31 @@
 #include "tm_driver/tm_listen_node_connect.h"
 #include "sstream"
 
+namespace {
+
+bool parse_tag_status(const std::string &subdata, int &tag_id, bool &tag_ok)
+{
+    std::stringstream ss(subdata);
+    std::string tag_token;
+    std::string status_token;
+    if (!std::getline(ss, tag_token, ',') || !std::getline(ss, status_token)) {
+        return false;
+    }
+    if (tag_token.empty()) {
+        return false;
+    }
+    try {
+        tag_id = std::stoi(tag_token);
+    }
+    catch (const std::exception &) {
+        return false;
+    }
+    tag_ok = (status_token == "true");
+    return true;
+}
+
+}
+
 ListenNodeConnection::ListenNodeConnection
   (TmDriver &iface,std::function<void(TmSctData)> sct_msg, std::function<void(std::string, std::string)> sta_msg, bool is_fake_)
   :iface(iface), sct_(iface.sct),sct_msg(sct_msg),sta_msg(sta_msg)
@@ -22,16 +47,16 @@ void ListenNodeConnection::build_sta_cmd(){
         sta_updated_ = true;
 
         if(staSubcmd == "01"){    // mode 01: Tag
-            std::vector<std::string> subdata_vec = split_subdata(staSubdata);
-            std::string staSubdata_tag = subdata_vec[0];
-            std::string staSubdata_tag_status = subdata_vec[1];
-            iface.check_tag = std::stoi(staSubdata_tag);
-            if (staSubdata_tag_status == "true"){
-                iface.check_tag_status = true;
-            }else {
-                iface.check_tag_status = false;
+            int tag_id = 0;
+            bool tag_ok = false;
+            if (parse_tag_status(staSubdata, tag_id, tag_ok)) {
+                iface.check_tag = tag_id;
+                iface.check_tag_status = tag_ok;
+                print_info("[check tag] check tag: %d status: %d", iface.check_tag, iface.check_tag_status);
             }
-            print_info("[check tag] check tag: %d status: %d", iface.check_tag, iface.check_tag_status);
+            else if (staSubdata != ",none") {
+                print_warn("TM_ROS: (TM_STA): malformed tag response: %s", staSubdata.c_str());
+            }
         }
     }
     sta_cv_.notify_all();
@@ -270,6 +295,11 @@ ListenNodeConnection::~ListenNodeConnection(){
     sta_cv_.notify_all();
     firstCheckIsOnListenNodeCondVar.notify_all();
     checkIsOnListenNodeCondVar.notify_all();
-    if (sct_.is_connected()) {}
+    if (listenNodeThread.joinable()) {
+        listenNodeThread.join();
+    }
+    if (checkListenNodeThread.joinable()) {
+        checkListenNodeThread.join();
+    }
     sct_.halt();
 }
