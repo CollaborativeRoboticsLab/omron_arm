@@ -19,12 +19,14 @@
   <build_depend>qtbase5-dev</build_depend>
   <build_depend>qt5-qmake</build_depend>
   <build_depend>rclcpp_action</build_depend>
+  <build_depend>ament_index_cpp</build_depend>
   <build_depend>tm_msgs</build_depend>
 
   <exec_depend>libqt5-core</exec_depend>
   <exec_depend>rclcpp</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend>rclcpp_action</exec_depend>
+  <exec_depend>ament_index_cpp</exec_depend>
   <exec_depend>tm_msgs</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
